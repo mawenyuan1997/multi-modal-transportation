@@ -17,8 +17,7 @@ with open('data/taxitime.csv') as f:
             taxi_time[s, e]=float(row[2])
 multi_time = {}
 for (id1, id2), ti in taxi_time.items():
-    # multi_time[id1,id2], path, route_type = shortest_path(id1,id2)
-    multi_time[id1,id2] = 5000+int(id1)
+    multi_time[id1,id2], path, route_type = shortest_path(id1,id2)
 
 for (id1, id2), t1 in multi_time.items():
     t2 = taxi_time[(id1, id2)]
