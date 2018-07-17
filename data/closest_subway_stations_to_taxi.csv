@@ -1,3 +1,4 @@
+taxi_id,subway_id1,time1,subway_id2,time2,subway_id3,time3,subway_id4,time4,subway_id5,time5
 7,R04,227,R05,251,R03,612,R06,735,G19,899
 12,420,308,142,341,140,372,R27,432,R26,500
 13,138,342,R25,476,139,501,R26,573,418,600

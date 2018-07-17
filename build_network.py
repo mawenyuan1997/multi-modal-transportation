@@ -8,6 +8,7 @@ def build_graph():
     # add nodes and edges of consecutive subway stations
     with open('data/subway_pair_traveltime.csv') as f:
       reader = csv.reader(f)
+      next(reader)
       for row in reader:
         r_id = row[0][0]
         start = r_id + '_' + row[1]
@@ -52,6 +53,7 @@ def build_graph():
     closest_st = {}
     with open('data/closest_subway_stations_to_taxi.csv') as f:
         reader=csv.reader(f)
+        next(reader)
         for row in reader:
             closest_st[row[0]] = []
             for i in range(5):
