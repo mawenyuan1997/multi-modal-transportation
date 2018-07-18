@@ -3,61 +3,60 @@ import time
 import datetime
 import collections
 class Graph:
-  def __init__(self):
-    self.nodes = set()
-    self.edges = collections.defaultdict(list)
-    self.distances = {}
-    self.labels = {}
+    def __init__(self):
+        self.nodes = set()
+        self.edges = collections.defaultdict(list)
+        self.distances = {}
+        self.labels = {}
 
-  def add_node(self, value):
-    self.nodes.add(value)
+    def add_node(self, value):
+        self.nodes.add(value)
 
-  def add_edge(self, from_node, to_node, distance, label):
-    if not to_node in self.edges[from_node]:
-        self.edges[from_node].append(to_node)
-        self.distances[(from_node, to_node)] = distance
-        self.labels[(from_node, to_node)] = label
-    else:
-        if distance < self.distances[(from_node, to_node)]:
+    def add_edge(self, from_node, to_node, distance, label):
+        if not to_node in self.edges[from_node]:
+            self.edges[from_node].append(to_node)
             self.distances[(from_node, to_node)] = distance
             self.labels[(from_node, to_node)] = label
+        else:
+            if distance < self.distances[(from_node, to_node)]:
+                self.distances[(from_node, to_node)] = distance
+                self.labels[(from_node, to_node)] = label
 
 # Dijsktra algorithm
 def dijsktra(graph, initial):
-  visited = {initial: 0}
-  path = {}
-  route = {}
+    visited = {initial: 0}
+    path = {}
+    route = {}
 
-  nodes = set(graph.nodes)
+    nodes = set(graph.nodes)
 
-  while nodes:
-    min_node = None
-    for node in nodes:
-      if node in visited:
+    while nodes:
+        min_node = None
+        for node in nodes:
+            if node in visited:
+                if min_node is None:
+                    min_node = node
+                elif visited[node] < visited[min_node]:
+                    min_node = node
         if min_node is None:
-          min_node = node
-        elif visited[node] < visited[min_node]:
-          min_node = node
+            break
 
-    if min_node is None:
-      break
+        nodes.remove(min_node)
+        current_weight = visited[min_node]
 
-    nodes.remove(min_node)
-    current_weight = visited[min_node]
+        for edge in graph.edges[min_node]:
+#           print((min_node, edge))
+            weight = current_weight + graph.distances[(min_node, edge)]
+            if edge not in visited or weight < visited[edge]:
+                visited[edge] = weight
+                path[edge] = min_node
+                route[edge] = graph.labels[(min_node, edge)]
 
-    for edge in graph.edges[min_node]:
-#       print((min_node, edge))
-      weight = current_weight + graph.distances[(min_node, edge)]
-      if edge not in visited or weight < visited[edge]:
-        visited[edge] = weight
-        path[edge] = min_node
-        route[edge] = graph.labels[(min_node, edge)]
-
-  return visited, path, route
+    return visited, path, route
 
 def shortest_path(graph, origin, dest):
     length, path, route = dijsktra(graph, origin)
-#     print(length[dest])
+    print(length)
     x = dest
     shortest_path = [dest]
     route_time = []
