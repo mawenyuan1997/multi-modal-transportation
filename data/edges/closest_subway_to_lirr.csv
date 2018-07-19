@@ -1,0 +1,14 @@
+lirr_id,subway1,time1,subway2,time2,subway3,time3,subway4,time4,subway5,time5
+1,721,286,G24,568,720,649,null,inf,null,inf
+2,720,196,G24,348,721,500,719,656,G22,681
+8,A28,136,128,191,R17,438,D17,452,129,468
+9,712,301,711,648,G15,723,713,983,710,1018
+10,G08,191,F07,642,null,inf,null,inf,null,inf
+11,F06,638,F05,818,null,inf,null,inf,null,inf
+12,235,44,D24,159,R31,170,234,341,G36,346
+13,A46,318,A47,609,S01,631,A45,724,248,852
+14,L24,66,L22,398,J24,417,A52,455,J27,457
+15,G06,65,F04,504,G05,528,G07,682,F03,939
+17,702,239,705,883,null,inf,null,inf,null,inf
+18,701,231,null,inf,null,inf,null,inf,null,inf
+99,H11,582,null,inf,null,inf,null,inf,null,inf
