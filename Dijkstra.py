@@ -22,6 +22,13 @@ class Graph:
                 self.distances[(from_node, to_node)] = distance
                 self.labels[(from_node, to_node)] = label
 
+# return the subway/bus route of an edge
+def check_route(label):
+    p = label.find(' ')
+    if p < 0:
+        return label, 'no route'
+    return (label[:p], label[p + 1:])
+
 # Dijsktra algorithm
 def dijsktra(graph, initial):
     visited = {initial: 0}
@@ -43,10 +50,14 @@ def dijsktra(graph, initial):
 
         nodes.remove(min_node)
         current_weight = visited[min_node]
-
         for edge in graph.edges[min_node]:
-#           print((min_node, edge))
             weight = current_weight + graph.distances[(min_node, edge)]
+            # add bus/subway transfer time
+            if min_node in path:
+                pt, pr = check_route(graph.labels[path[min_node], min_node])
+                t, r = check_route(graph.labels[min_node, edge])
+                if pt == t and pr != r:
+                    weight += 180
             if edge not in visited or weight < visited[edge]:
                 visited[edge] = weight
                 path[edge] = min_node
