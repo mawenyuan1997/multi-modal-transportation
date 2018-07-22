@@ -16,8 +16,13 @@ with open('data/taxitime.csv') as f:
         if s not in ['264','265'] and e not in ['264','265'] and s!=e:
             taxi_time[s, e]=float(row[2])
 multi_time = {}
-for (id1, id2), ti in taxi_time.items():
-    multi_time[id1,id2], path, route_type = shortest_path(id1,id2)
+graph = build_graph()
+with open('data/multimodal.csv', 'w') as file:
+    file.write('orign,destination,time\n')
+    for (id1, id2), ti in taxi_time.items():
+        multi_time[id1,id2], path, route_type = shortest_path(graph,id1,id2)
+        print(id1,id2,multi_time[id1,id2])
+        file.write(id1 + ',' + id2 + ',' + str(multi_time[id1,id2]) + '\n')
 
 for (id1, id2), t1 in multi_time.items():
     t2 = taxi_time[(id1, id2)]
@@ -26,5 +31,5 @@ for (id1, id2), t1 in multi_time.items():
 t = np.arange(0., 6000, 1)
 plt.plot(t, t, 'r--')
 plt.xlabel('taxi time')
-plt.ylabel('subway+bike time')
+plt.ylabel('multimodal time')
 plt.show()
