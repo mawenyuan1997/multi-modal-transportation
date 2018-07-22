@@ -94,8 +94,8 @@ def add_bike_pair(graph):
         reader = csv.reader(f)
         next(reader)
         for row in reader:
-            start = row[1]
-            end = row[2]
+            start = 'bike_' + row[1]
+            end = 'bike_' + row[2]
             if start == end or row[3]=='': continue
             t = float(row[3])
             graph.add_node(start)
@@ -155,7 +155,7 @@ def add_closest_subway_to_bike(graph):
         reader=csv.reader(f)
         next(reader)
         for row in reader:
-            id = row[0]
+            id = 'bike_' + row[0]
             for i in range(5):
                 if row[2*i+1] == 'null': break
                 st, t = (row[2*i+1], float(row[2*i+2]))
@@ -226,7 +226,7 @@ def add_closest_bus_to_bike(graph):
         reader=csv.reader(f)
         next(reader)
         for row in reader:
-            b_id = row[0]
+            b_id = 'bike_' + row[0]
             for i in range(5):
                 if row[2*i+1] == 'null': break
                 st, t = (row[2*i+1], float(row[2*i+2]))
@@ -255,7 +255,7 @@ def add_closest_bike_to_taxi(graph):
             id = row[0]
             for i in range(5):
                 if row[2*i+1] == 'null': break
-                st, t = row[2*i+1], float(row[2*i+2])
+                st, t = 'bike_' + row[2*i+1], float(row[2*i+2])
                 graph.add_edge(st, id, t, 'walk')
                 graph.add_edge(id, st, t, 'walk')
 
@@ -268,7 +268,7 @@ def add_closest_bike_to_bus(graph):
             id = row[0]
             for i in range(5):
                 if row[2*i+1] == 'null': break
-                st, t = row[2*i+1], float(row[2*i+2])
+                st, t = 'bike_' + row[2*i+1], float(row[2*i+2])
                 graph.add_edge(st, id, t, 'walk')
                 graph.add_edge(id, st, t, 'walk')
 
@@ -281,7 +281,7 @@ def add_closest_bike_to_subway(graph):
             id = row[0]
             for i in range(5):
                 if row[2*i+1] == 'null': break
-                st, t = row[2*i+1], float(row[2*i+2])
+                st, t = 'bike_' + row[2*i+1], float(row[2*i+2])
                 graph.add_edge(st, id+'N', t, 'walk')
                 graph.add_edge(st, id+'S', t, 'walk')
                 graph.add_edge(id+'N', st, t, 'walk')
@@ -296,7 +296,7 @@ def add_closest_bike_to_lirr(graph):
             id = 'lirr_' + row[0]
             for i in range(5):
                 if row[2*i+1] == 'null': break
-                st, t = row[2*i+1], float(row[2*i+2])
+                st, t = 'bike_' + row[2*i+1], float(row[2*i+2])
                 graph.add_edge(st, id, t, 'walk')
                 graph.add_edge(id, st, t, 'walk')
 
@@ -312,3 +312,8 @@ def add_closest_lirr_to_taxi(graph):
                 st, t = 'lirr_' + row[2*i+1], float(row[2*i+2])
                 graph.add_edge(st, id, t, 'walk')
                 graph.add_edge(id, st, t, 'walk')
+
+def modify_edges(graph, bike_id):
+    for edge in graph.edges[bike_id]:
+        if edge[:4] == 'bike':
+            graph.distances[bike_id, edge] *= 0.8
