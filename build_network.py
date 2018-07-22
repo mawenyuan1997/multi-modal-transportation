@@ -97,7 +97,7 @@ def add_bike_pair(graph):
             start = row[1]
             end = row[2]
             if start == end or row[3]=='': continue
-            t = float(row[3])
+            t = float(row[3])#*0.8# assume the e-bike speed is 1.25 times faster than bike
             graph.add_node(start)
             graph.add_node(end)
             graph.add_edge(start, end, t, 'bike')
