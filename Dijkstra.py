@@ -2,6 +2,7 @@ import csv
 import time
 import datetime
 import collections
+from heapq import *
 class Graph:
     def __init__(self):
         self.nodes = set()
@@ -32,21 +33,27 @@ def check_route(label):
 # Dijsktra algorithm
 def dijsktra(graph, initial):
     visited = {initial: 0}
+    h = [(0, initial)]
     path = {}
     route = {}
 
     nodes = set(graph.nodes)
 
-    while nodes:
-        min_node = None
-        for node in nodes:
-            if node in visited:
-                if min_node is None:
-                    min_node = node
-                elif visited[node] < visited[min_node]:
-                    min_node = node
-        if min_node is None:
-            break
+    while nodes and h:
+        # min_node = None
+        # for node in nodes:
+        #     if node in visited:
+        #         if min_node is None:
+        #             min_node = node
+        #         elif visited[node] < visited[min_node]:
+        #             min_node = node
+
+        dist, min_node = heappop(h)
+        if min_node not in nodes:
+            while h and min_node not in nodes:
+                dist, min_node = heappop(h)
+            if not h and min_node not in nodes: 
+                break
 
         nodes.remove(min_node)
         current_weight = visited[min_node]
@@ -59,6 +66,7 @@ def dijsktra(graph, initial):
                 weight += waiting_time(pt, pr, t, r)
             if edge not in visited or weight < visited[edge]:
                 visited[edge] = weight
+                heappush(h, (weight, edge))
                 path[edge] = min_node
                 route[edge] = graph.labels[(min_node, edge)]
 
