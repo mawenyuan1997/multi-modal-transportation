@@ -30,8 +30,8 @@ def check_route(label):
         return label, 'no route'
     return (label[:p], label[p + 1:])
 
-# Dijsktra algorithm
-def dijsktra(graph, initial):
+# Dijkstra algorithm
+def dijkstra(graph, initial):
     visited = {initial: 0}
     h = [(0, initial)]
     path = {}
@@ -73,7 +73,7 @@ def dijsktra(graph, initial):
     return visited, path, route
 
 def shortest_path(graph, origin, dest):
-    length, path, route = dijsktra(graph, origin)
+    length, path, route = dijkstra(graph, origin)
     x = dest
     shortest_path = [dest]
     route_time = []

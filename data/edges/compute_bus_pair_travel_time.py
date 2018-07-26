@@ -1,12 +1,15 @@
 import pygtfs
 with open('bus_pair_traveltime.csv','a') as file:
     sched = pygtfs.Schedule(":memory:")
-    pygtfs.append_feed(sched, "../bus_gtfs")
+    zone =  'Manhattan'
+    # 'Manhattan'
+    # , 'Staten']:
+    pygtfs.append_feed(sched, "../bus_gtfs/gtfs_" + zone + '.zip' )
     pair_set = set()
     for tr in sched.trips:
         n = len(tr.stop_times)
         r_id = tr.route_id
-        sts = [(st.stop_id, st.arrival_time, st.departure_time)for st in tr.stop_times]
+        sts = [(st.stop_id, st.arrival_time, st.departure_time) for st in tr.stop_times]
         sts.sort(key=lambda x:x[1])
         for i in range(n - 1):
             j = i + 1

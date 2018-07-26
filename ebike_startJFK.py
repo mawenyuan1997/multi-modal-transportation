@@ -2,7 +2,7 @@ import csv
 import time
 import datetime
 import collections
-from Dijkstra import shortest_path, dijsktra
+from Dijkstra import shortest_path, dijkstra
 from build_network import build_graph, modify_edges
 import numpy as np
 import matplotlib.pyplot as plt
@@ -45,7 +45,7 @@ for b_id in bike_ids:
     filename = 'data/ebike/' + b_id + '.csv'
     if filename not in exist:
         with open(filename,'w') as file:
-            dist, path, route = dijsktra(graph,'132')
+            dist, path, route = dijkstra(graph,'132')
             for id2 in dest:
                 print(b_id,'132',id2,dist[id2])
                 file.write('132' + ',' + id2 + ',' +

@@ -4,7 +4,7 @@ import urllib.request
 import csv
 import numpy as np
 dir_url = "https://maps.googleapis.com/maps/api/directions/json?"
-key = "AIzaSyCmCsBj8nNVrl5HQ8BIVTojycRW0ebbIcE"
+key = "AIzaSyDSkg58EylmbXSOr3YZNRgC6lfF7LhoVO4"
 lirr_station = {}
 def distance(lat1, lon1, lat2, lon2):
       from math import sin, cos, sqrt, atan2, radians
@@ -33,15 +33,20 @@ with open("../lirr_gtfs/stops.txt") as f:
             lirr_station[id] = lat, lon
 
 bus_station = {}
-with open("../bus_gtfs/stops.txt") as f:
-      reader = csv.reader(f)
-      next(reader)
-      for row in reader:
-            # if row[0][-1] in ['N', 'S']:
-            #       continue
-            id, lat, lon = row[0], float(row[3]), float(row[4])
-            bus_station[id] = lat, lon
+for zone in ['Brooklyn', 'Bronx', 'Queens', 'Manhattan', 'Staten']:
+      with open("../bus_gtfs/"+zone+"_stops.txt") as f:
+            reader = csv.reader(f)
+            next(reader)
+            for row in reader:
+                  # if row[0][-1] in ['N', 'S']:
+                  #       continue
+                  if zone=='Staten':
+                        id, lat, lon = row[0], float(row[2]), float(row[3])
+                  else:
+                        id, lat, lon = row[0], float(row[3]), float(row[4])
+                  bus_station[id] = lat, lon
 
+no_route = False
 with open("closest_bus_to_lirr.csv", 'a') as file:
       for lirr_id, (lirr_lat, lirr_lon) in lirr_station.items():
             if lirr_id in exist_lirr_id:
@@ -49,7 +54,7 @@ with open("closest_bus_to_lirr.csv", 'a') as file:
             dist = []
             s = str(lirr_lat) + ',' + str(lirr_lon)
             for bus_id, (bus_lat, bus_lon) in bus_station.items():
-                  if distance(bus_lat, bus_lon, lirr_lat, lirr_lon) > 4:
+                  if distance(bus_lat, bus_lon, lirr_lat, lirr_lon) > 1:
                         continue
                   e = str(bus_lat) + ',' + str(bus_lon)
                   query = dir_url + "origin=" + s + "&destination=" + e + \
@@ -58,10 +63,13 @@ with open("closest_bus_to_lirr.csv", 'a') as file:
                         response = json.loads(f.read().decode())
                   if len(response['routes']) == 0:
                         print('no route')
-                        continue
+                        print(query)
+                        no_route = True
+                        break
                   t = response["routes"][0]["legs"][0]["duration"]["value"]
                   # print((lirr_id, t))
                   dist.append((bus_id, t))
+            if no_route: break
             m = [float('inf'),float('inf'),float('inf'),float('inf'),float('inf')]
             i= ['null','null','null','null','null']
             for id, t in dist:
@@ -70,10 +78,11 @@ with open("closest_bus_to_lirr.csv", 'a') as file:
                               m = m[:j] + [t] + m[j : 4]
                               i = i[:j] + [id] + i[j : 4]
                               break
-            print("for lirr station:" + lirr_id)
-            print("closest bus stations:" + str(i))
-            print("time:" + str(m))
+            
             if i[0] != 'null':
+                  print("for lirr station:" + lirr_id)
+                  print("closest bus stations:" + str(i))
+                  print("time:" + str(m))
                   file.write(lirr_id+','+str(i[0])+','+str(m[0])+\
                                     ','+str(i[1])+','+str(m[1])+\
                                     ','+str(i[2])+','+str(m[2])+\
@@ -81,4 +90,5 @@ with open("closest_bus_to_lirr.csv", 'a') as file:
                                     ','+str(i[4])+','+str(m[4]))
                   file.write('\n')
             else:
-                  print()
+                  print("for lirr station:" + lirr_id)
+                  print("closest bus stations:" + str(i))
