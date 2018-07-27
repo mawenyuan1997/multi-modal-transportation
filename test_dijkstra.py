@@ -4,7 +4,7 @@ import datetime
 import collections
 from Dijkstra import shortest_path
 from build_network import build_graph
-origin, dest = '45', '132'
+origin, dest = '100', '137'
 graph = build_graph()
 length, route, route_type = shortest_path(graph, origin, dest)
 print(length)

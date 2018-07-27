@@ -101,9 +101,9 @@ def waiting_time(pt, pr, t, r):
                   12,12,10,10,10,5,12,10,10,20,15,10,10,30]
     subway_time = dict(zip(subway_route, subway_day))
 
-    if (pt, t) == ('subway', 'subway') and pr != r:
+    if (pt, t) == ('walk', 'subway') or (pt, t) == ('subway', 'subway') and pr != r:
         return subway_time[r] / 2
-    elif (pt, t) == ('lirr', 'lirr') and pr != r:
+    elif (pt, t) == ('walk', 'lirr') or (pt, t) == ('lirr', 'lirr') and pr != r:
         return 600
     elif (pt, t) == ('walk', 'bus') or (pt, t) == ('bus', 'bus') and pr != r:
         return 300

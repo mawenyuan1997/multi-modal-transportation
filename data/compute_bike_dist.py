@@ -3,7 +3,7 @@ import json
 import urllib.request
 import csv
 dir_url = "https://maps.googleapis.com/maps/api/directions/json?"
-key = "AIzaSyDSkg58EylmbXSOr3YZNRgC6lfF7LhoVO4"
+key = "AIzaSyBrGxSTS1HWzi8BbgFdwIvu7rgrlMaj_WI"
 bike_coord = {}
 with open("bikeStation_coordinates.csv") as f:
     reader = csv.reader(f)
@@ -20,7 +20,7 @@ with open("bike_pair_dist.csv") as f:
 with open("edges/bike_pair_traveltime.csv") as f, open("bike_pair_dist.csv",'a') as file:
     reader = csv.reader(f)
     next(reader)
-    file.write('origin,destination,distance\n')
+    # file.write('origin,destination,distance\n')
     for row in reader:
         if row[1]==row[2] or (row[1],row[2]) in exist: continue
         start_station, end_station = row[1], row[2]
