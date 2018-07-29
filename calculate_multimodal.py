@@ -6,6 +6,7 @@ from Dijkstra import shortest_path, dijkstra
 from build_network import build_graph
 import numpy as np
 import matplotlib.pyplot as plt
+from transform_graph import *
 taxi_time = {}
 with open('data/taxitime.csv') as f:
     reader=csv.reader(f)
@@ -18,16 +19,22 @@ with open('data/taxitime.csv') as f:
 multi_time = {}
 count_bike = {}
 graph = build_graph()
-print('nodes:'+str(len(graph.nodes)))
-print('edges:'+str(len(graph.distances)/2))
-with open('data/multimodal.csv', 'w') as file:
+edge_graph = Edge_graph(graph)
+print('original graph nodes:'+str(len(graph.nodes)))
+print('original graph edges:'+str(len(graph.distances)))
+print('edge graph nodes:'+str(len(edge_graph.nodes)))
+print('edge graph edges:'+str(len(edge_graph.distances)))
+with open('data/multimodal_all_ebike.csv', 'w') as file:
     file.write('origin,destination,time\n')
     for id1 in range(1,264):
-        length, path, route = dijkstra(graph, str(id1))
+        origin = 'taxi_' + str(id1)
+        length, path, route = dijkstra(edge_graph, origin)
         for id2 in range(1,264):
             if id1 != id2 and (str(id1),str(id2)) in taxi_time:
-                file.write(str(id1) + ',' + str(id2) + ',' + str(length[str(id2)]) + '\n')
-                print(str(id1) + ',' + str(id2) + ',' + str(length[str(id2)]))
+                dest = 'taxi_' + str(id2)
+                time = length[dest]
+                file.write(str(id1) + ',' + str(id2) + ',' + str(time) + '\n')
+                print(str(id1) + ',' + str(id2) + ',' + str(time))
                 # x = str(id2)
                 # shortest_path = [x]
                 # route_time = []
