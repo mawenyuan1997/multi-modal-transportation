@@ -3,6 +3,7 @@ import csv
 import time
 import datetime
 import collections
+import os.path
 
 def build_graph():
     graph = Graph()
@@ -11,22 +12,9 @@ def build_graph():
     add_taxi_od(graph)
     add_bike_pair(graph)
     add_lirr_pair(graph)
-    add_closest_subway_to_taxi(graph)
-    add_closest_subway_to_bus(graph)
-    add_closest_subway_to_bike(graph)
-    add_closest_subway_to_lirr(graph)
-    add_closest_bus_to_taxi(graph)
-    # add_closest_bus_to_bus(graph)
-    add_closest_bus_to_subway(graph)
-    add_closest_bus_to_bike(graph)
-    add_closest_bus_to_lirr(graph)
-    add_closest_bike_to_taxi(graph)
-    add_closest_bike_to_bus(graph)
-    add_closest_bike_to_subway(graph)
-    add_closest_bike_to_lirr(graph)
-    add_closest_lirr_to_taxi(graph)
-    add_closest_lirr_to_bus(graph)
+    add_edges_of_closest_stations(graph)
     add_airport_express(graph)
+    add_waiting_time(graph)
     return graph
 
 def add_taxi_od(graph):
@@ -36,6 +24,7 @@ def add_taxi_od(graph):
         for row in reader:
             if int(row[0]) < 264:
                 graph.add_node('taxi_' + row[0])
+                graph.node_set['taxi_' + row[0]].add('taxi_' + row[0])
 
     with open('data/edges/taxi_bike_walking.csv') as f:
         reader = csv.reader(f)
@@ -58,14 +47,14 @@ def add_subway_pair(graph):
         next(reader)
         for row in reader:
             r_id = row[0]
-            start = 'subway_' + row[1]
-            end = 'subway_' + row[2]
+            start = 'subway_' + r_id + '_' + row[1]
+            end = 'subway_' + r_id + '_' + row[2]
             x = time.strptime(row[3],'%H:%M:%S')
             t = datetime.timedelta(hours=x.tm_hour,minutes=x.tm_min,seconds=x.tm_sec).total_seconds()
-            subway_id.add(start)
-            subway_id.add(end)
             graph.add_node(start)
             graph.add_node(end)
+            graph.node_set['subway_' + row[1][:-1]].add(start)
+            graph.node_set['subway_' + row[2][:-1]].add(end)
             graph.add_edge(start, end, t, 'subway ' + r_id)
 
     # add edges for transfers between different subway routes
@@ -76,18 +65,10 @@ def add_subway_pair(graph):
             id1, id2 = 'subway_' + row[0], 'subway_' + row[1]
             t = int(row[3])
             if id1 != id2:
-                graph.add_edge(id1+'N',id2+'N',t,'transfer')
-                graph.add_edge(id2+'N',id1+'S',t,'transfer')
-                graph.add_edge(id2+'S',id1+'N',t,'transfer')
-                graph.add_edge(id2+'S',id1+'S',t,'transfer')
-
-    # add transfers between north and south directions
-    for id in subway_id:
-        if id[-1] == 'N':
-            id1 = id[:-1] + 'S'
-        else:
-            id1 = id[:-1] + 'N'
-        graph.add_edge(id, id1, 180, 'transfer')
+                for from_id in graph.node_set[id1]:
+                    for to_id in graph.node_set[id2]:
+                        graph.add_edge(from_id, to_id, t, 'transfer')
+                        graph.add_edge(to_id, from_id, t, 'transfer')
 
 def add_bus_pair(graph):
     # add nodes and edges of consecutive bus stations
@@ -102,10 +83,9 @@ def add_bus_pair(graph):
             t = datetime.timedelta(hours=x.tm_hour,minutes=x.tm_min,seconds=x.tm_sec).total_seconds()
             graph.add_node(start)
             graph.add_node(end)
-            graph.node_set['bus_'+row[1]].append(start)
-            graph.node_set['bus_'+row[2]].append(end)
+            graph.node_set['bus_'+row[1]].add(start)
+            graph.node_set['bus_'+row[2]].add(end)
             graph.add_edge(start, end, t, 'bus ' + r_id)
-            graph.add_edge(end, start, t, 'bus ' + r_id)
 
 def add_bike_pair(graph):
     # add nodes and edges of common pair of bike stations
@@ -119,7 +99,9 @@ def add_bike_pair(graph):
             t = float(row[3])
             graph.add_node(start)
             graph.add_node(end)
-            graph.add_edge(start, end, t*0.8, 'bike')
+            graph.node_set[start].add(start)
+            graph.node_set[end].add(end)
+            graph.add_edge(start, end, t, 'bike')
 
 def add_lirr_pair(graph):
     # add nodes and edges of consecutive lirr stations
@@ -134,217 +116,31 @@ def add_lirr_pair(graph):
             t = datetime.timedelta(hours=x.tm_hour,minutes=x.tm_min,seconds=x.tm_sec).total_seconds()
             graph.add_node(start)
             graph.add_node(end)
-            graph.node_set['lirr_'+row[1]].append(start)
-            graph.node_set['lirr_'+row[2]].append(end)
+            graph.node_set['lirr_'+row[1]].add(start)
+            graph.node_set['lirr_'+row[2]].add(end)
             graph.add_edge(start, end, t, 'lirr ' + r_id)
 
 
-def add_closest_subway_to_taxi(graph):
+def add_edges_of_closest_stations(graph):
     # add edges from each taxi station to its nearest 5 subway stations
-    with open('data/edges/closest_subway_to_taxi.csv') as f:
-        reader=csv.reader(f)
-        next(reader)
-        for row in reader:
-            t_id = 'taxi_' + row[0]
-            for i in range(5):
-                if row[2*i+1] == 'null': break
-                st, t = ('subway_' + row[2*i+1], float(row[2*i+2]))
-                graph.add_edge(t_id, st+'N', t, 'walk')
-                graph.add_edge(t_id, st+'S', t, 'walk')
-                graph.add_edge(st+'N', t_id, t, 'walk')
-                graph.add_edge(st+'S', t_id, t, 'walk')
-
-def add_closest_subway_to_bus(graph):
-    # add edges from each bus stop to its nearest 5 subway stations
-    with open('data/edges/closest_subway_to_bus.csv') as f:
-        reader=csv.reader(f)
-        next(reader)
-        for row in reader:
-            for id in graph.node_set['bus_' + row[0]]:
-                for i in range(5):
-                    if row[2*i+1] == 'null': break
-                    st, t = ('subway_' + row[2*i+1], float(row[2*i+2]))
-                    graph.add_edge(id, st+'N', t, 'walk')
-                    graph.add_edge(id, st+'S', t, 'walk')
-                    graph.add_edge(st+'N', id, t, 'walk')
-                    graph.add_edge(st+'S', id, t, 'walk')
-
-def add_closest_subway_to_bike(graph):
-    # add edges from each bike stop to its nearest 5 subway stations
-    with open('data/edges/closest_subway_to_bike.csv') as f:
-        reader=csv.reader(f)
-        next(reader)
-        for row in reader:
-            id = 'bike_' + row[0]
-            for i in range(5):
-                if row[2*i+1] == 'null': break
-                st, t = ('subway_' + row[2*i+1], float(row[2*i+2]))
-                graph.add_edge(id, st+'N', t, 'walk')
-                graph.add_edge(id, st+'S', t, 'walk')
-                graph.add_edge(st+'N', id, t, 'walk')
-                graph.add_edge(st+'S', id, t, 'walk')
-
-def add_closest_subway_to_lirr(graph):
-    # add edges from each lirr stop to its nearest 5 subway stations
-    with open('data/edges/closest_subway_to_lirr.csv') as f:
-        reader=csv.reader(f)
-        next(reader)
-        for row in reader:
-            id = 'lirr_' + row[0]
-            for i in range(5):
-                if row[2*i+1] == 'null': break
-                st, t = ('subway_' + row[2*i+1], float(row[2*i+2]))
-                graph.add_edge(id, st+'N', t, 'walk')
-                graph.add_edge(id, st+'S', t, 'walk')
-                graph.add_edge(st+'N', id, t, 'walk')
-                graph.add_edge(st+'S', id, t, 'walk')
-
-def add_closest_bus_to_subway(graph):
-    # add edges from each subway stop to its nearest 5 bus stations
-    with open('data/edges/closest_bus_to_subway.csv') as f:
-        reader=csv.reader(f)
-        next(reader)
-        for row in reader:
-            id = 'subway_' + row[0]
-            for i in range(5):
-                if row[2*i+1] == 'null': break
-                st, t = 'bus_' + row[2*i+1], float(row[2*i+2])
-                graph.add_edge(st, id+'N', t, 'walk')
-                graph.add_edge(st, id+'S', t, 'walk')
-                graph.add_edge(id+'N', st, t, 'walk')
-                graph.add_edge(id+'S', st, t, 'walk')
-
-def add_closest_bus_to_taxi(graph):
-    # add edges from each taxi station to its nearest 5 bus stations
-    with open('data/edges/closest_bus_to_taxi.csv') as f:
-        reader=csv.reader(f)
-        next(reader)
-        for row in reader:
-            t_id = 'taxi_' + row[0]
-            for i in range(5):
-                if row[2*i+1] == 'null': break
-                st, t = ('bus_' + row[2*i+1], float(row[2*i+2]))
-                graph.add_edge(t_id, st, t, 'walk')
-                graph.add_edge(st, t_id, t, 'walk')
-
-def add_closest_bus_to_bus(graph):
-    # add edges from each bus station to its nearest 5 bus stations
-    with open('data/edges/closest_bus_to_bus.csv') as f:
-        reader=csv.reader(f)
-        next(reader)
-        for row in reader:
-            b_id = 'bus_' + row[0]
-            for i in range(5):
-                if row[2*i+1] == 'null': break
-                st, t = ('bus_' + row[2*i+1], float(row[2*i+2]))
-                graph.add_edge(b_id, st, t, 'walk')
-                graph.add_edge(st, b_id, t, 'walk')
-
-def add_closest_bus_to_bike(graph):
-    # add edges from each bike station to its nearest 5 bus stations
-    with open('data/edges/closest_bus_to_bike.csv') as f:
-        reader=csv.reader(f)
-        next(reader)
-        for row in reader:
-            b_id = 'bike_' + row[0]
-            for i in range(5):
-                if row[2*i+1] == 'null': break
-                st, t = ('bus_' + row[2*i+1], float(row[2*i+2]))
-                graph.add_edge(b_id, st, t, 'walk')
-                graph.add_edge(st, b_id, t, 'walk')
-
-def add_closest_bus_to_lirr(graph):
-    # add edges from each lirr station to its nearest 5 bus stations
-    with open('data/edges/closest_bus_to_lirr.csv') as f:
-        reader=csv.reader(f)
-        next(reader)
-        for row in reader:
-            id = 'lirr_' + row[0]
-            for i in range(5):
-                if row[2*i+1] == 'null': break
-                st, t = ('bus_' + row[2*i+1], float(row[2*i+2]))
-                graph.add_edge(id, st, t, 'walk')
-                graph.add_edge(st, id, t, 'walk')
-
-def add_closest_bike_to_taxi(graph):
-    # add edges from each taxi station to its nearest 5 bike stations
-    with open('data/edges/closest_bike_to_taxi.csv') as f:
-        reader = csv.reader(f)
-        next(reader)
-        for row in reader:
-            id = 'taxi_' + row[0]
-            for i in range(5):
-                if row[2*i+1] == 'null': break
-                st, t = 'bike_' + row[2*i+1], float(row[2*i+2])
-                graph.add_edge(st, id, t, 'walk')
-                graph.add_edge(id, st, t, 'walk')
-
-def add_closest_bike_to_bus(graph):
-    # add edges from each bus station to its nearest 5 bike stations
-    with open('data/edges/closest_bike_to_bus.csv') as f:
-        reader = csv.reader(f)
-        next(reader)
-        for row in reader:
-            id = 'bus_' + row[0]
-            for i in range(5):
-                if row[2*i+1] == 'null': break
-                st, t = 'bike_' + row[2*i+1], float(row[2*i+2])
-                graph.add_edge(st, id, t, 'walk')
-                graph.add_edge(id, st, t, 'walk')
-
-def add_closest_bike_to_subway(graph):
-    # add edges from each subway stop to its nearest 5 bike stations
-    with open('data/edges/closest_bike_to_subway.csv') as f:
-        reader=csv.reader(f)
-        next(reader)
-        for row in reader:
-            id = 'subway_' + row[0]
-            for i in range(5):
-                if row[2*i+1] == 'null': break
-                st, t = 'bike_' + row[2*i+1], float(row[2*i+2])
-                graph.add_edge(st, id+'N', t, 'walk')
-                graph.add_edge(st, id+'S', t, 'walk')
-                graph.add_edge(id+'N', st, t, 'walk')
-                graph.add_edge(id+'S', st, t, 'walk')
-
-def add_closest_bike_to_lirr(graph):
-    # add edges from each lirr station to its nearest 5 bike stations
-    with open('data/edges/closest_bike_to_lirr.csv') as f:
-        reader = csv.reader(f)
-        next(reader)
-        for row in reader:
-            id = 'lirr_' + row[0]
-            for i in range(5):
-                if row[2*i+1] == 'null': break
-                st, t = 'bike_' + row[2*i+1], float(row[2*i+2])
-                graph.add_edge(st, id, t, 'walk')
-                graph.add_edge(id, st, t, 'walk')
-
-def add_closest_lirr_to_taxi(graph):
-    # add edges from each taxi station to its nearest 5 lirr stations
-    with open('data/edges/closest_lirr_to_taxi.csv') as f:
-        reader = csv.reader(f)
-        next(reader)
-        for row in reader:
-            id = 'taxi_' + row[0]
-            for i in range(5):
-                if row[2*i+1] == 'null': break
-                st, t = 'lirr_' + row[2*i+1], float(row[2*i+2])
-                graph.add_edge(st, id, t, 'walk')
-                graph.add_edge(id, st, t, 'walk')
-
-def add_closest_lirr_to_bus(graph):
-    # add edges from each bus station to its nearest 5 lirr stations
-    with open('data/edges/closest_lirr_to_bus.csv') as f:
-        reader = csv.reader(f)
-        next(reader)
-        for row in reader:
-            id = 'bus_' + row[0]
-            for i in range(5):
-                if row[2*i+1] == 'null': break
-                st, t = 'lirr_' + row[2*i+1], float(row[2*i+2])
-                graph.add_edge(st, id, t, 'walk')
-                graph.add_edge(id, st, t, 'walk')
+    transport = ['subway','bus','lirr','taxi','bike']
+    for tr1 in transport:
+        for tr2 in transport:
+            filename = 'data/edges/closest_' + tr1 + '_to_' + tr2 + '.csv'
+            if not os.path.isfile(filename) or tr1 == tr2: continue
+            with open(filename) as f:
+                reader=csv.reader(f)
+                next(reader)
+                for row in reader:
+                    for from_id in graph.node_set[tr2 + '_' + row[0]]:
+                        for i in range(5):
+                            if row[2*i+1] == 'null': break
+                            st_id, t = (tr1 + '_' + row[2*i+1], float(row[2*i+2]))
+                            for to_id in graph.node_set[st_id]:
+                                t1 = t + waiting_time(to_id) if tr1 in ['subway', 'bus', 'lirr'] else t
+                                t2 = t + waiting_time(from_id) if tr2 in ['subway', 'bus', 'lirr'] else t
+                                graph.add_edge(from_id, to_id, t1, 'walk')
+                                graph.add_edge(to_id, from_id, t2, 'walk')
 
 def add_airport_express(graph):
     graph.add_node('port_authority')
@@ -368,13 +164,36 @@ def add_airport_express(graph):
             if len(row[1]) == 6:
                 s, e = row[0], 'bus_' + row[1]
             elif len(row[1]) == 4:
-                s, e = row[0], 'subway_' + row[1]
+                s, e = row[0], 'subway_' + row[1][:-1]
             else:
                 s, e = row[0], row[1]
-            graph.add_edge(s, e, 300, 'walk')
-            graph.add_edge(e, s, 300, 'walk')
+            for to_node in graph.node_set[e]:
+                graph.add_edge(s, to_node, 300, 'walk')
+                graph.add_edge(to_node, s, 300, 'walk')
 
 def modify_edges(graph, bike_id):
     for edge in graph.edges[bike_id]:
         if edge[:4] == 'bike':
             graph.distances[bike_id, edge] *= 0.8
+
+def add_waiting_time(graph):
+    for node, nodeset in graph.node_set.items():
+        if len(nodeset) > 1:
+            for id1 in nodeset:
+                for id2 in nodeset:
+                    if id1 != id2:
+                        graph.add_edge(id1, id2, waiting_time(id2), 'transfer')
+
+def waiting_time(st_id):
+    subway_route = ['1','2','3','4','5','5X','6','6X','7','7X','GS','A','B','C','D','E',
+                        'F','FS','G','J','L','M','N','Q','R','H','W','Z','SI']
+    subway_day = [20,8,8,8,12,12,10,8,5,5,5,8,10,10,10,
+                    12,12,10,10,10,5,12,10,10,20,15,10,10,30]
+    subway_time = dict(zip(subway_route, subway_day))
+    p = st_id.split('_')
+    if p[0] == 'subway':
+        return subway_time[p[1]] / 2 * 60
+    elif p[0] == 'bus':
+        return (10/2 * 60 if p[1][0] == 'M' else 20/2 * 60)
+    else:
+        return 600

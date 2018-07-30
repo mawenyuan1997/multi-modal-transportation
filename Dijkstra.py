@@ -9,7 +9,7 @@ class Graph:
         self.edges = collections.defaultdict(list)
         self.distances = {}
         self.labels = {}
-        self.node_set = collections.defaultdict(list)
+        self.node_set = collections.defaultdict(set)
 
     def add_node(self, value):
         self.nodes.add(value)
@@ -68,6 +68,6 @@ def shortest_path(graph, origin, dest):
     route_type.reverse()
 #     print(shortest_path)
 #     print(route_type)
-    # print(route_time)
+    print(route_time)
     return length[dest], shortest_path, route_type
 
