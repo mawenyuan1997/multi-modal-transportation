@@ -128,6 +128,7 @@ def add_edges_of_closest_stations(graph):
         for tr2 in transport:
             filename = 'data/edges/closest_' + tr1 + '_to_' + tr2 + '.csv'
             if not os.path.isfile(filename) or tr1 == tr2: continue
+            #print(tr1,tr2)
             with open(filename) as f:
                 reader=csv.reader(f)
                 next(reader)
@@ -141,6 +142,30 @@ def add_edges_of_closest_stations(graph):
                                 t2 = t + waiting_time(from_id) if tr2 in ['subway', 'bus', 'lirr'] else t
                                 graph.add_edge(from_id, to_id, t1, 'walk')
                                 graph.add_edge(to_id, from_id, t2, 'walk')
+    transport1 = ['subway','bus','lirr','bike']
+    for tr1 in transport1:
+            tr2 = 'taxi'
+            filename = 'data/edges/closest_' + tr1 + '_to_' + tr2 + '1.csv'
+            if not os.path.isfile(filename) or tr1 == tr2: continue
+            #print(tr1,tr2)
+            with open(filename) as f:
+                reader=csv.reader(f)
+                next(reader)
+                for row in reader:
+                    for from_id in graph.node_set[tr2 + '_' + row[0]]:
+                        for i in range(500):
+                            if row[2*i+1] == 'null': break
+                            #print(i,row[2*i+1],row[2*i+2])
+                            st_id, t = (tr1 + '_' + row[2*i+1], float(row[2*i+2]))
+                            for to_id in graph.node_set[st_id]:
+                                t1 = t + waiting_time(to_id) if tr1 in ['subway', 'bus', 'lirr'] else t
+                                t2 = t + waiting_time(from_id) if tr2 in ['subway', 'bus', 'lirr'] else t
+                                graph.add_edge(from_id, to_id, t1, 'walk')
+                                graph.add_edge(to_id, from_id, t2, 'walk')
+                                
+                                
+                                
+
 
 def add_airport_express(graph):
     graph.add_node('port_authority')
