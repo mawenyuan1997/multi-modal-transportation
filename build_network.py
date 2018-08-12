@@ -152,6 +152,7 @@ def add_edges_of_closest_stations(graph):
                 reader=csv.reader(f)
                 next(reader)
                 for row in reader:
+                    #print(row[0])
                     for from_id in graph.node_set[tr2 + '_' + row[0]]:
                         for i in range(500):
                             if row[2*i+1] == 'null': break

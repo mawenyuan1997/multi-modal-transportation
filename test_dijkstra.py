@@ -4,7 +4,7 @@ import datetime
 import collections
 from Dijkstra import shortest_path
 from build_network import build_graph
-origin, dest = 'taxi_107', 'taxi_54'
+origin, dest = 'taxi_132', 'taxi_117'
 print('building the graph')
 graph = build_graph()
 print('running dijkstra')
