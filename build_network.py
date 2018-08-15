@@ -200,7 +200,7 @@ def add_airport_express(graph):
 def modify_edges(graph, bike_id):
     for edge in graph.edges[bike_id]:
         if edge[:4] == 'bike':
-            graph.distances[bike_id, edge] *= 0.8
+            graph.distances[bike_id, edge] *= 2/3
 
 def add_waiting_time(graph):
     for node, nodeset in graph.node_set.items():
