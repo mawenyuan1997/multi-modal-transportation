@@ -15,6 +15,7 @@ def build_graph():
     add_edges_of_closest_stations(graph)
     add_airport_express(graph)
     add_waiting_time(graph)
+    delete_edge(graph)
     return graph
 
 def add_taxi_od(graph):
@@ -223,3 +224,10 @@ def waiting_time(st_id):
         return (10/2 * 60 if p[1][0] == 'M' else 20/2 * 60)
     else:
         return 600
+
+def delete_edge(graph):
+    with open('data/delete.csv') as f:
+        reader = csv.reader(f)
+        for row in reader:
+            del graph.distances[row[0],row[1]]
+            graph.edges[row[0]].remove(row[1])
