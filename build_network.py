@@ -135,14 +135,22 @@ def add_edges_of_closest_stations(graph):
                 next(reader)
                 for row in reader:
                     for from_id in graph.node_set[tr2 + '_' + row[0]]:
+                        subway_route = {}
                         for i in range(5):
                             if row[2*i+1] == 'null': break
                             st_id, t = (tr1 + '_' + row[2*i+1], float(row[2*i+2]))
                             for to_id in graph.node_set[st_id]:
                                 t1 = t + waiting_time(to_id) if tr1 in ['subway', 'bus', 'lirr'] else t
                                 t2 = t + waiting_time(from_id) if tr2 in ['subway', 'bus', 'lirr'] else t
-                                graph.add_edge(from_id, to_id, t1, 'walk')
+                                if tr1 == 'subway':
+                                    sr = to_id.split('_')[1]
+                                    if sr not in subway_route or t1 <= subway_route[sr]: 
+                                        graph.add_edge(from_id, to_id, t1, 'walk')
+                                        subway_route[sr] = t1
+                                else:
+                                    graph.add_edge(from_id, to_id, t1, 'walk')
                                 graph.add_edge(to_id, from_id, t2, 'walk')
+
     transport1 = ['subway','bus','lirr','bike']
     for tr1 in transport1:
             tr2 = 'taxi'
@@ -155,6 +163,7 @@ def add_edges_of_closest_stations(graph):
                 for row in reader:
                     #print(row[0])
                     for from_id in graph.node_set[tr2 + '_' + row[0]]:
+                        subway_route = {}
                         for i in range(500):
                             if row[2*i+1] == 'null': break
                             #print(i,row[2*i+1],row[2*i+2])
@@ -162,7 +171,13 @@ def add_edges_of_closest_stations(graph):
                             for to_id in graph.node_set[st_id]:
                                 t1 = t + waiting_time(to_id) if tr1 in ['subway', 'bus', 'lirr'] else t
                                 t2 = t + waiting_time(from_id) if tr2 in ['subway', 'bus', 'lirr'] else t
-                                graph.add_edge(from_id, to_id, t1, 'walk')
+                                if tr1 == 'subway':
+                                    sr = to_id.split('_')[1]
+                                    if sr not in subway_route or t1 <= subway_route[sr]: 
+                                        graph.add_edge(from_id, to_id, t1, 'walk')
+                                        subway_route[sr] = t1
+                                else:
+                                    graph.add_edge(from_id, to_id, t1, 'walk')
                                 graph.add_edge(to_id, from_id, t2, 'walk')
                                 
                                 
@@ -229,5 +244,6 @@ def delete_edge(graph):
     with open('data/delete.csv') as f:
         reader = csv.reader(f)
         for row in reader:
-            del graph.distances[row[0],row[1]]
-            graph.edges[row[0]].remove(row[1])
+            if (row[0],row[1]) in graph.distances:
+                del graph.distances[row[0],row[1]]
+                graph.edges[row[0]].remove(row[1])
